@@ -1176,11 +1176,58 @@ function highlightLangSetting(lang) {
     }
 }
 
+// function checkAdminAuth() {
+//     const password = prompt(currentLang === 'en' ? "Enter Admin Password:" : "กรุณาใส่รหัสผ่าน Admin:");
+//     if (password === "Khunnawut.Yu37977310501") {
+//         window.location.href = "admin.html";
+//     } else if (password !== null) {
+//         alert(currentLang === 'en' ? "Incorrect Password!" : "รหัสผ่านไม่ถูกต้อง!");
+//     }
+// }
+
 function checkAdminAuth() {
-    const password = prompt(currentLang === 'en' ? "Enter Admin Password:" : "กรุณาใส่รหัสผ่าน Admin:");
-    if (password === "Khunnawut.Yu37977310501") {
+    // Open Custom Modal instead of Prompt
+    closeSettingsModal(); // Close parent modal first
+    const modal = document.getElementById('adminAuthModal');
+    if (modal) {
+        modal.classList.add('show');
+        // Focus input
+        setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+    }
+}
+
+function closeAdminAuthModal() {
+    const modal = document.getElementById('adminAuthModal');
+    if (modal) modal.classList.remove('show');
+    // Clear input
+    document.getElementById('adminPasswordInput').value = '';
+}
+
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById('icon-' + inputId);
+
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = "password";
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+function submitAdminAuth(e) {
+    e.preventDefault();
+    const password = document.getElementById('adminPasswordInput').value;
+
+    // Dynamic Password Check
+    const savedPass = localStorage.getItem('thp_admin_pass') || "Khunnawut.Yu37977310501";
+
+    if (password === savedPass) {
         window.location.href = "admin.html";
-    } else if (password !== null) {
+    } else {
         alert(currentLang === 'en' ? "Incorrect Password!" : "รหัสผ่านไม่ถูกต้อง!");
     }
 }

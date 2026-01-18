@@ -576,6 +576,32 @@
         </div>
     </div>
 
+    <!-- Admin Auth Modal -->
+    <div id="adminAuthModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-modal" onclick="closeAdminAuthModal()">&times;</span>
+            <h3 style="color:var(--primary); margin-bottom:1rem;">Admin Access</h3>
+            <form onsubmit="submitAdminAuth(event)">
+                <div class="form-group">
+                    <label>Password</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="password" id="adminPasswordInput" placeholder="Enter Admin Password" required
+                            style="flex:1;">
+                        <button type="button" onclick="togglePasswordVisibility('adminPasswordInput')"
+                            style="background:#eee; border:1px solid #ddd; border-radius:6px; width:45px; cursor:pointer; color:#555;">
+                            <i class="fa-solid fa-eye" id="icon-adminPasswordInput"></i>
+                        </button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" onclick="closeAdminAuthModal()" class="tab-btn"
+                        style="flex:1; justify-content:center;">Cancel</button>
+                    <button type="submit" class="search-btn" style="flex:1;">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Translations & Country Data -->
     <script src="i18n.js"></script>
     <script src="emsJumboData.js"></script>
