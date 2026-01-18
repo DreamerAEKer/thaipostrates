@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - THP Rate Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .back-btn {
+            background: #eee;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .section-title {
+            color: var(--primary);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .rate-item {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .rate-item input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .rate-item .name {
+            flex: 2;
+        }
+
+        .rate-item .price {
+            flex: 1;
+        }
+
+        .rate-item .weight {
+            flex: 1;
+        }
+
+        .rate-item .actions {
+            color: #d9534f;
+            cursor: pointer;
+        }
+
+        .add-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .save-btn {
+            background: var(--primary);
+            color: white;
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .reset-btn {
+            background: #6c757d;
+            color: white;
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .system-section {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-btn {
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            transition: opacity 0.2s;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        /* Make container scrollable above fixed footer */
+        body {
+            margin: 0;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container" style="padding-bottom: 80px;">
+        <div class="admin-header">
+            <h2><i class="fa-solid fa-user-shield"></i> Admin Dashboard</h2>
+            <a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to App</a>
+        </div>
+
+        <div class="alert"
+            style="background: #e8f4fd; color: #0d47a1; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+            <i class="fa-solid fa-circle-info"></i> Edits here will modify the "Fallback/Estimated" rates used when the
+            live server is slow.
+        </div>
+
+        <h3 class="section-title">Domestic Rates (Within Thailand)</h3>
+        <div id="domestic-list">
+            <!-- Items injected by JS -->
+        </div>
+        <button class="add-btn" onclick="addRate('domestic')">+ Add Service</button>
+
+        <h3 class="section-title">International Rates (Standard)</h3>
+        <div id="international-list">
+            <!-- Items injected by JS -->
+        </div>
+        <button class="add-btn" onclick="addRate('international')">+ Add Service</button>
+
+        <hr style="margin: 3rem 0; border: 0; border-top: 1px solid #eee;">
+
+        <div class="system-section">
+            <h3 class="section-title" style="color: #2e7d32; margin-top:0;">
+                <i class="fa-solid fa-database"></i> สำรองและกู้คืนข้อมูล (Backup & Restore)
+            </h3>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 1rem;">ดาวน์โหลดข้อมูลเก็บไว้เป็นไฟล์ .json
+                หรือนำเข้าข้อมูลเดิมหลังจากอัปเดตโปรแกรม</p>
+            <div style="display: flex; gap: 15px;">
+                <button onclick="downloadBackup()" class="action-btn" style="background: #5c6bc0;">
+                    <i class="fa-solid fa-download"></i> ดาวน์โหลดข้อมูล (Backup)
+                </button>
+                <button onclick="document.getElementById('restoreInput').click()" class="action-btn"
+                    style="background: #424242;">
+                    <i class="fa-solid fa-file-import"></i> นำเข้าข้อมูล (Restore)
+                </button>
+                <input type="file" id="restoreInput" accept=".json" style="display: none;"
+                    onchange="restoreBackup(this)">
+            </div>
+        </div>
+
+        <div class="system-section" style="margin-top: 2rem;">
+            <h3 class="section-title" style="color: #5c6bc0; margin-top:0;">
+                <i class="fa-solid fa-lock"></i> เปลี่ยนรหัสผ่าน (Change Password)
+            </h3>
+            <div style="max-width: 400px;">
+                <div class="form-group">
+                    <label>รหัสผ่านปัจจุบัน</label>
+                    <input type="password" id="currentInfoPassword" class="form-control">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>รหัสผ่านใหม่</label>
+                        <input type="password" id="newInfoPassword" class="form-control">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>ยืนยันรหัสผ่านใหม่</label>
+                        <input type="password" id="confirmInfoPassword" class="form-control">
+                    </div>
+                </div>
+                <button onclick="changePassword()" class="action-btn"
+                    style="background: #5c6bc0; width: 100%; margin-top: 10px;">
+                    บันทึกรหัสผ่านใหม่
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="save-bar">
+        <button class="reset-btn" onclick="resetToDefaults()">Reset Defaults</button>
+        <button class="save-btn" onclick="saveChanges()">Save Changes</button>
+    </div>
+
+    <script>
+        // Default Data
+        const defaultRates = {
+            domestic: [
+                { name_service: "EMS", total_price: 67.00, max_weight_range: "1000g" },
+                { name_service: "eCo-Post", total_price: 40.00, max_weight_range: "1000g" },
+                { name_service: "Registered (Box)", total_price: 60.00, max_weight_range: "1000g" },
+                { name_service: "Registered (Envelope)", total_price: 53.00, max_weight_range: "1000g" },
+                { name_service: "Parcel Post", total_price: 20.00, max_weight_range: "1000g" }
+            ],
+            international: [
+                { name_service: "Courier Post", total_price: 1450.00, max_weight_range: "1000g" },
+                { name_service: "EMS World", total_price: 1100.00, max_weight_range: "1000g" },
+                { name_service: "ePacket", total_price: 850.00, max_weight_range: "1000g" },
+                { name_service: "Air Mail", total_price: 650.00, max_weight_range: "1000g" }
+            ]
+        };
+
+        let currentRates = { domestic: [], international: [] };
+
+        function init() {
+            // Load from LocalStorage or Default
+            const stored = localStorage.getItem('thp_rates');
+            if (stored) {
+                currentRates = JSON.parse(stored);
+            } else {
+                currentRates = JSON.parse(JSON.stringify(defaultRates));
+            }
+            render();
+        }
+
+        function render() {
+            renderList('domestic', currentRates.domestic);
+            renderList('international', currentRates.international);
+        }
+
+        function renderList(type, list) {
+            const container = document.getElementById(`${type}-list`);
+            container.innerHTML = '';
+            list.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'rate-item';
+                div.innerHTML = `
+                    <input type="text" class="name" value="${item.name_service}" placeholder="Service Name" onchange="updateRate('${type}', ${index}, 'name_service', this.value)">
+                    <input type="number" class="price" value="${item.total_price}" placeholder="Price" onchange="updateRate('${type}', ${index}, 'total_price', this.value)">
+                    <input type="text" class="weight" value="${item.max_weight_range}" placeholder="Weight" onchange="updateRate('${type}', ${index}, 'max_weight_range', this.value)">
+                    <i class="fa-solid fa-trash-can actions" onclick="removeRate('${type}', ${index})"></i>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateRate(type, index, field, value) {
+            currentRates[type][index][field] = value;
+        }
+
+        function addRate(type) {
+            currentRates[type].push({ name_service: "New Service", total_price: 0, max_weight_range: "1000g" });
+            render();
+        }
+
+        function removeRate(type, index) {
+            if (confirm('Delete this rate?')) {
+                currentRates[type].splice(index, 1);
+                render();
+            }
+        }
+
+        function saveChanges() {
+            localStorage.setItem('thp_rates', JSON.stringify(currentRates));
+            alert('Changes Saved! Return to the app to see them.');
+        }
+
+        function resetToDefaults() {
+            // Check Dynamic Password
+            const savedPass = localStorage.getItem('thp_admin_pass') || "37977310501";
+            const password = prompt("Please confirm Admin Password to reset:");
+
+            if (password === savedPass) {
+                if (confirm('Reset all rates to default? This cannot be undone.')) {
+                    currentRates = JSON.parse(JSON.stringify(defaultRates));
+                    localStorage.setItem('thp_rates', JSON.stringify(currentRates));
+                    render();
+                }
+            } else if (password !== null) {
+                alert("Incorrect Password! (รหัสผ่านไม่ถูกต้อง)");
+            }
+        }
+
+        function downloadBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(localStorage.getItem('thp_rates'));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "thp_rates_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function restoreBackup(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    if (json.domestic && json.international) {
+                        localStorage.setItem('thp_rates', JSON.stringify(json));
+                        alert('Restore Complete! Page will reload.');
+                        location.reload();
+                    } else {
+                        alert('Invalid Backup File Format');
+                    }
+                } catch (err) {
+                    alert('Error reading file: ' + err);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function changePassword() {
+            const currentPass = document.getElementById('currentInfoPassword').value;
+            const newPass = document.getElementById('newInfoPassword').value;
+            const confirmPass = document.getElementById('confirmInfoPassword').value;
+
+            const savedPass = localStorage.getItem('thp_admin_pass') || "37977310501";
+
+            if (currentPass !== savedPass) {
+                alert("Current Password Incorrect (รหัสผ่านเดิมไม่ถูกต้อง)");
+                return;
+            }
+
+            if (newPass.length < 4) {
+                alert("New password too short (min 4 chars)");
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                alert("New Passwords do not match (รหัสผ่านใหม่ไม่ตรงกัน)");
+                return;
+            }
+
+            localStorage.setItem('thp_admin_pass', newPass);
+            alert("Password Changed Successfully! (เปลี่ยนรหัสผ่านเรียบร้อย)");
+
+            // Clear inputs
+            document.getElementById('currentInfoPassword').value = '';
+            document.getElementById('newInfoPassword').value = '';
+            document.getElementById('confirmInfoPassword').value = '';
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

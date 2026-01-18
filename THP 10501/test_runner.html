@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Rate Engine Test Runner</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+        }
+
+        .pass {
+            color: green;
+        }
+
+        .fail {
+            color: red;
+            font-weight: bold;
+        }
+
+        .summary {
+            margin-top: 20px;
+            font-size: 1.2em;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Rate Engine Verification</h1>
+    <div id="output">Running tests...</div>
+
+    <script src="domesticRemoteData.js"></script>
+    <script src="emsJumboData.js"></script>
+    <script src="rateEngine.js"></script>
+    <script>
+        const output = document.getElementById('output');
+        let logHtml = '';
+        let passed = 0;
+        let failed = 0;
+
+        function log(msg, className = '') {
+            logHtml += `<div class="${className}">${msg}</div>`;
+        }
+
+        function assertRate(name, weight, zip, expectedService, expectedPrice) {
+            try {
+                if (typeof RateEngine === 'undefined') {
+                    throw new Error("RateEngine NOT LOADED");
+                }
+
+                const results = RateEngine.calculateAllDomestic(weight, zip);
+                const service = results.find(r => r.name === expectedService);
+
+                let isMatch = false;
+                let actualPrice = service ? service.price : 'Not Found';
+
+                if (service) {
+                    if (expectedPrice === null) {
+                        isMatch = false; // Expected null aka unavailable, but found service?
+                        // Wait, if expectedPrice is null, we expect service to NOT exist or return null logic? 
+                        // In my node script: assertRate("Reg Box 20g", 20, "", "Registered (Box)", null);
+                        // My lookup returns null if unavailable.
+                        // calculateAllDomestic filters out nulls?
+                        // "items.push..." if price is not null.
+                        // So if expectedPrice is null, checking if service is found is enough?
+                        // Let's adjust logic: "Registered (Box)" @ 20g returns null price -> not in list.
+                        // So result.find should be undefined.
+                    } else {
+                        if (typeof expectedPrice === 'number') {
+                            isMatch = Math.abs(parseFloat(service.price) - expectedPrice) < 0.1;
+                        } else {
+                            isMatch = service.price == expectedPrice; // Loose equality
+                        }
+                    }
+                } else {
+                    // Service not found
+                    if (expectedPrice === null) isMatch = true; // Expected unavailable, got unavailable.
+                }
+
+                if (isMatch) {
+                    // Start log( `[PASS] ${name}` , 'pass');
+                    passed++;
+                } else {
+                    log(`[FAIL] ${name}: ${expectedService} @ ${weight}g`, 'fail');
+                    log(`&nbsp;&nbsp;Expected: ${expectedPrice}`);
+                    log(`&nbsp;&nbsp;Actual:   ${actualPrice}`);
+                    failed++;
+                }
+            } catch (e) {
+                log(`[ERROR] ${name}: ${e.message}`, 'fail');
+                failed++;
+            }
+        }
+
+        // Run Tests
+        setTimeout(() => {
+            // 1. EMS
+            assertRate("EMS 20g", 20, "", "EMS", 32);
+            assertRate("EMS 1kg", 1000, "", "EMS", 67);
+            assertRate("EMS 2kg", 2000, "", "EMS", 97);
+            assertRate("EMS 10kg", 10000, "", "EMS", 220);
+
+            // 2. Remote
+            assertRate("EMS Remote 20g", 20, "84140", "EMS", 52); // 32+20
+
+            // 3. Eco
+            assertRate("Eco 1kg", 1000, "", "eCo-Post", 40);
+
+            // 4. Reg
+            assertRate("Reg Env 10g", 10, "", "Registered (Envelope)", 18);
+            assertRate("Reg Box 20g", 20, "", "Registered (Box)", null);
+
+            // 5. Parcel
+            assertRate("Parcel 2kg", 2000, "", "Parcel Post", 45);
+
+            // Render
+            let finalHtml = logHtml;
+            if (failed === 0) {
+                finalHtml += '<div class="pass summary">ALL TESTS PASSED (' + passed + ' assertions)</div>';
+                // Add a special element for browser agent to find
+                finalHtml += '<div id="test-status">SUCCESS</div>';
+            } else {
+                finalHtml += `<div class="fail summary">FAILED: ${failed} tests failed.</div>`;
+                finalHtml += '<div id="test-status">FAILURE</div>';
+            }
+            output.innerHTML = finalHtml;
+        }, 500);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title">ตรวจสอบค่าบริการไปรษณีย์ไทย</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Sarabun:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- Local CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Resource Hints -->
+    <link rel="preconnect" href="https://international.thailandpost.com">
+    <link rel="dns-prefetch" href="https://international.thailandpost.com">
+
+    <style>
+        /* Language Select Style */
+        .lang-select {
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-right: 15px;
+            outline: none;
+        }
+
+        .lang-switcher {
+            display: flex;
+            align-items: center;
+            background: transparent;
+            font-weight: 700;
+            color: #ccc;
+            margin-right: 25px;
+            /* FIX: Spacing from icons to prevent overlap */
+            border: none;
+        }
+
+        .lang-option {
+            cursor: pointer;
+            padding: 2px 5px;
+            transition: color 0.3s;
+        }
+
+        .lang-option:hover {
+            color: var(--primary);
+        }
+
+        .lang-option.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            box-shadow: none;
+            background: transparent;
+        }
+
+        .lang-switcher .separator {
+            margin: 0 8px;
+            color: #ccc;
+            font-weight: 300;
+            display: block;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-left: 10px;
+            text-decoration: none;
+            transition: color 0.3s;
+            width: auto;
+            height: auto;
+            box-shadow: none;
+            border-radius: 0;
+        }
+
+        .icon-btn:hover {
+            color: var(--primary);
+            transform: none;
+            box-shadow: none;
+            border-color: transparent;
+        }
+
+        body {
+            font-family: 'Outfit', 'Sarabun', sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <!-- <img src="assets/thailandpost_logo.png" alt="Thailand Post Logo" class="logo"> -->
+                <!-- Assuming logo was removed or handled by h1 content in original, utilizing fa-icon based on previous code -->
+                <h1><i class="fa-solid fa-paper-plane"></i> Thai Post Rates</h1>
+                <p class="subtitle">(Unofficial)</p>
+            </div>
+
+            <!-- Language & Tools -->
+            <div class="header-tools">
+                <!-- Language Switcher -->
+                <div class="lang-switcher">
+                    <span class="lang-option active" data-lang="th" onclick="changeLanguage('th')">TH</span>
+                    <span class="separator">|</span>
+                    <span class="lang-option" data-lang="en" onclick="changeLanguage('en')">EN</span>
+                </div>
+
+                <div style="width: 1px; height: 24px; background: #ddd; margin: 0 4px;"></div>
+
+                <button onclick="openHistoryModal()" class="icon-btn" title="History">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
+                <button onclick="openInfoModal()" class="icon-btn" title="Service Info">
+                    <i class="fa-solid fa-circle-info"></i>
+                </button>
+                <button onclick="openSettingsModal()" class="icon-btn" title="Settings">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- History Modal -->
+        <div id="historyModal" class="modal">
+            <div class="modal-content" style="max-width: 400px; height: 80vh; display:flex; flex-direction:column;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="color:var(--primary); margin:0;">ประวัติการคำนวณ</h3>
+                    <div>
+                        <button onclick="HistoryManager.clear()"
+                            style="background:none; border:none; color:#d9534f; cursor:pointer; font-size:0.9em; margin-right:10px;">ล้างประวัติ</button>
+                        <span class="close-modal" onclick="closeHistoryModal()"
+                            style="position:static; float:none; line-height:1;">&times;</span>
+                    </div>
+                </div>
+                <div id="historyList" style="flex:1; overflow-y:auto; padding-right:5px;">
+                    <!-- Items -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content" style="max-width: 350px;">
+                <span class="close-modal" onclick="closeSettingsModal()">&times;</span>
+                <h3 style="margin-bottom: 20px;" data-i18n="headerSettings">ตั้งค่า (Settings)</h3>
+                <h4 style="font-size: 0.95rem; margin-bottom: 10px;" data-i18n="labelDefaultLang">ภาษาเริ่มต้น (Default
+                    Language)</h4>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="tab-btn active" style="flex:1; border:1px solid #ddd;" id="setLangTh"
+                        onclick="setDefaultLang('th')">ไทย</button>
+                    <button class="tab-btn" style="flex:1; border:1px solid #ddd;" id="setLangEn"
+                        onclick="setDefaultLang('en')">English</button>
+                </div>
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                <a href="#" onclick="checkAdminAuth(); return false;" class="search-btn"
+                    style="text-decoration:none; display:block; text-align:center; background:#eee; color:#333; font-size: 0.95rem;"
+                    data-i18n="btnAdminPanel">
+                    <i class="fa-solid fa-lock"></i> จัดการอัตราค่าบริการ (Admin)
+                </a>
+            </div>
+        </div>
+
+        <div class="tabs-wrapper">
+            <div class="tabs" id="tabsContainer">
+                <button class="tab-btn active" data-tab="domestic" onclick="switchTab('domestic')">
+                    <span class="thai-flag-icon"></span><span data-i18n="tabDomestic">ในประเทศ</span>
+                </button>
+                <button class="tab-btn" data-tab="jumbo" onclick="switchTab('jumbo')">
+                    <i class="fa-solid fa-truck-fast"></i><span data-i18n="tabEMSJumbo">EMS จัมโบ้</span>
+                </button>
+                <button class="tab-btn" data-tab="international" onclick="switchTab('international')">
+                    <i class="fa-solid fa-globe"></i><span data-i18n="tabInternational">ระหว่างประเทศ</span>
+                </button>
+            </div>
+
+
+            <div class="scroll-hint"></div>
+        </div>
+
+        <div id="domesticContent">
+            <form id="rateForm" onsubmit="calculateRate(event)">
+                <div class="form-group">
+                    <label for="weight" data-i18n="labelWeight">น้ำหนัก (กรัม)</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="weight" placeholder="เช่น 1000 สำหรับ 1 กก." data-i18n-ph="phWeight"
+                            required min="1" onkeydown="checkEnter(event)">
+                    </div>
+                </div>
+
+                <div class="form-group" id="countryGroup" style="display: none;">
+                    <label for="country" data-i18n="labelCountry">ประเทศปลายทาง</label>
+                    <div class="input-wrapper">
+                        <select id="country">
+                            <option value="" disabled selected data-i18n="optCountrySelect">เลือกประเทศปลายทาง...
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 2026 Rates Toggle (Original Blue Box with Fixes) -->
+                <!-- FIX: Increased padding and ensured balanced alignment -->
+                <div class="form-group"
+                    style="background: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb; margin-bottom: 20px;">
+                    <label class="blue-box-label">
+                        <input type="checkbox" id="use2026Rates" style="margin-right: 12px; width: 18px; height: 18px;"
+                            onchange="toggle2026Inputs()">
+                        <span data-i18n="labelCheckRemote">ตรวจสอบพื้นที่ท่องเที่ยว พื้นที่ห่างไกล และพื้นที่เกาะ (Check
+                            Tourist, Remote & Island Areas)</span>
+                    </label>
+                </div>
+
+                <!-- 2026 Zip Code Inputs (Hidden by default) -->
+                <div id="zipInputs2026" style="display: none; margin-bottom: 20px; animation: fadeIn 0.3s;">
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="originZip" style="color: #0d47a1;">รหัสปณ. ต้นทาง (Origin Zip)</label>
+                            <input type="text" id="originZip" placeholder="10XXX" maxlength="5"
+                                style="border-color: #bbdefb; background: #fff;" oninput="checkPartialZip('origin')">
+                            <!-- Helper Checkbox -->
+                            <div id="originPartialCheck"
+                                style="display:none; margin-top:5px; font-size:0.85em; background:#fff3e0; padding:5px; border-radius:4px; border:1px solid #ffe0b2;">
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="isOriginRemote" style="margin-right:5px;">
+                                    <span id="originPartialLabel" style="color:#e65100;">พื้นที่ ...?</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="destZip" style="color: #0d47a1;">รหัสปณ. ปลายทาง (Destination Zip)</label>
+                            <input type="text" id="destZip" placeholder="10XXX" maxlength="5"
+                                style="border-color: #bbdefb; background: #fff;" oninput="checkPartialZip('dest')">
+                            <!-- Helper Checkbox -->
+                            <div id="destPartialCheck"
+                                style="display:none; margin-top:5px; font-size:0.85em; background:#fff3e0; padding:5px; border-radius:4px; border:1px solid #ffe0b2;">
+                                <label style="cursor:pointer; display:flex; align-items:center;">
+                                    <input type="checkbox" id="isDestRemote" style="margin-right:5px;">
+                                    <span id="destPartialLabel" style="color:#e65100;">พื้นที่ ...?</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <small
+                        style="color: #666; display: block; margin-top: -10px; margin-bottom: 10px;">*ระบบจะตรวจสอบว่าพื้นที่ต้นทางและปลายทางอยู่ในกลุ่มพื้นที่ห่างไกลเดียวกันหรือไม่
+                        (ถ้าใช่ จะไม่คิดค่าเพิ่ม)</small>
+                </div>
+
+                <button type="submit" class="search-btn" data-i18n="btnCalculate"
+                    style="display: none;">คำนวณค่าส่ง</button>
+            </form>
+        </div>
+
+        <div id="jumboContent" style="display: none;">
+            <form id="jumboForm" onsubmit="calculateJumboRate(event)">
+                <!-- Calculation Mode -->
+                <!-- Mode Selection -->
+                <div class="form-group"
+                    style="background:#f5f5f5; padding:10px; border-radius:8px; margin-bottom:15px;">
+                    <label style="font-weight:bold; margin-bottom:10px; display:block;"
+                        data-i18n="labelCalcMode">รูปแบบการคำนวณ (Calculation Mode)</label>
+                    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                        <label style="cursor:pointer; display:flex; align-items:center;">
+                            <input type="radio" name="jumboMode" value="weight" style="margin-right:5px;" checked
+                                onchange="toggleJumboMode(); calculateJumbo()">
+                            <span data-i18n="radioWeightMode">คำนวณตามน้ำหนัก/ขนาด</span>
+                        </label>
+                        <label style="cursor:pointer; display:flex; align-items:center;">
+                            <input type="radio" name="jumboMode" value="item" style="margin-right:5px;"
+                                onchange="toggleJumboMode(); calculateJumbo()">
+                            <span data-i18n="radioItemMode">สินค้าสำเร็จรูป</span>
+                        </label>
+                        <label style="cursor:pointer; display:flex; align-items:center;">
+                            <input type="radio" name="jumboMode" value="pallet" style="margin-right:5px;"
+                                onchange="toggleJumboMode(); calculateJumbo()">
+                            <span data-i18n="radioPalletMode">เหมาจ่าย Roll Pallet</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Item Selection -->
+                <div id="jumboItemSection" style="display:none; margin-bottom:15px;">
+                    <div class="form-group">
+                        <label data-i18n="labelServiceType">Service Type</label>
+                        <select id="jumboItemSelect" onchange="calculateJumbo()">
+                            <option value="" disabled selected data-i18n="optNoItem">ไม่ได้เลือกสินค้า (N/A)</option>
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Pallet Selection -->
+                <div id="jumboPalletSection" style="display:none; margin-bottom:15px;">
+                    <div class="form-group input-group-row">
+                        <select id="jumboPalletUserType" style="flex: 1;" onchange="calculateJumbo()">
+                            <option value="general" data-i18n="optPalletGeneral">บุคคลทั่วไป (General)</option>
+                            <option value="student" data-i18n="optPalletStudent">นักเรียน/นักศึกษา (Student)</option>
+                            <option value="otop" data-i18n="optPalletOTOP">OTOP/e-Commerce</option>
+                        </select>
+                        <input type="number" id="jumboPalletQty" placeholder="Qty" value="1" min="1"
+                            style="width: 100px;" oninput="calculateJumbo()">
+                    </div>
+                </div>
+
+                <!-- Origin & Destination & Zip Code -->
+                <div class="input-group-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label data-i18n="labelOrigin">ต้นทาง (Origin)</label>
+                        <select id="jumboOrigin" onchange="calculateJumbo()">
+                            <option value="" disabled selected data-i18n="optProvincesLoading">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label data-i18n="labelDest">ปลายทาง (Destination)</label>
+                        <select id="jumboDest" onchange="calculateJumbo()">
+                            <option value="" disabled selected data-i18n="optProvincesLoading">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="form-group zip-group">
+                        <label data-i18n="labelZipcode">รหัสปณ. (Zip)</label>
+                        <input type="text" id="jumboZipcode" placeholder="10XXX" maxlength="5"
+                            oninput="checkJumboZipMatch(); calculateJumbo()">
+                        <small id="jumboZipWarning"
+                            style="color: #d32f2f; display: none; font-size: 0.8em; margin-top: 5px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> <span
+                                data-i18n="msgZipMismatch">รหัสไปรษณีย์ไม่ตรงกับจังหวัด</span>
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Actual Weight & Volumetric Weight -->
+                <div class="input-group-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label data-i18n="labelWeight">น้ำหนักจริง (กรัม)</label>
+                        <input type="number" id="jumboWeight" placeholder="0" min="0" required
+                            oninput="calculateJumbo()">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label data-i18n="labelVolumetric">น้ำหนักปริมาตร (กก.)</label>
+                        <input type="number" id="jumboVolWeight" placeholder="0.00" readonly
+                            style="background:#f9f9f9; color:#888;">
+                        <small style="color:#999; font-size:0.8em;">(WxLxH / 6000)</small>
+                    </div>
+                </div>
+
+                <!-- Dimensions -->
+                <!-- Dimensions -->
+                <div class="form-group">
+                    <label data-i18n="labelDimensions">ขนาด (กว้าง x ยาว x สูง) ซม.</label>
+                    <div class="input-group-row">
+                        <input type="number" id="jumboWidth" placeholder="กว้าง (W)" data-i18n-ph="phWidth"
+                            oninput="autoCalcJumboVol(); calculateJumbo()" required>
+                        <input type="number" id="jumboLength" placeholder="ยาว (L)" data-i18n-ph="phLength"
+                            oninput="autoCalcJumboVol(); calculateJumbo()" required>
+                        <input type="number" id="jumboHeight" placeholder="สูง (H)" data-i18n-ph="phHeight"
+                            oninput="autoCalcJumboVol(); calculateJumbo()" required>
+                    </div>
+                </div>
+
+                <!-- Remote Area Option -->
+                <div class="form-group">
+                    <label style="cursor: pointer; display: flex; align-items: center;">
+                        <input type="checkbox" id="jumboIsRemote" style="margin-right: 10px;"
+                            onchange="calculateJumbo()">
+                        <span data-i18n="labelRemoteArea">พื้นที่นําจ่ายเกาะ / พื้นที่ห่างไกล (Island / Remote Area
+                            +100฿)</span>
+                    </label>
+                </div>
+
+                <!-- Insurance Option -->
+                <div class="form-group">
+                    <label data-i18n="labelInsurance">ประกันภัยเพิ่ม (Declared Value for Insurance)</label>
+                    <input type="number" id="jumboDeclaredValue" placeholder="ระบุมูลค่าสิ่งของ (บาท)"
+                        data-i18n-ph="phDeclaredValue" min="0" oninput="calculateJumbo()">
+                    <small style="color: #666;" data-i18n="msgInsuranceLimit">*คุ้มครองสูงสุด 200,000 บาท
+                        (ค่าธรรมเนียมเริ่มต้น 15 บาท)</small>
+                </div>
+
+                <!-- Additional Services -->
+                <div class="form-group"
+                    style="margin-top: 15px; padding: 15px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px;">
+                    <label style="color: #2e7d32; font-weight: bold; margin-bottom: 10px; display: block;"
+                        data-i18n="headerAddOns">บริการเสริม
+                        (Additional Services)</label>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="cursor: pointer; display: flex; align-items: center;">
+                            <input type="checkbox" id="jumboPickup" style="margin-right: 10px;"
+                                onchange="calculateJumbo()">
+                            <span data-i18n="chkPickup">รับสิ่งของ ณ ที่อยู่ผู้ฝาก (Pickup at Sender)</span>
+                        </label>
+                        <label style="cursor: pointer; display: flex; align-items: center;">
+                            <input type="checkbox" id="jumboDelivery" style="margin-right: 10px;"
+                                onchange="calculateJumbo()">
+                            <span data-i18n="chkDelivery">นำจ่าย ณ ที่อยู่ผู้รับ (Delivery to Receiver)</span>
+                        </label>
+                    </div>
+                </div>
+
+
+            </form>
+
+            <div id="resultCard" style="display:none; margin-top:20px; border-top:1px solid #ddd; padding-top:20px;">
+                <div id="result"></div>
+            </div>
+        </div>
+
+        <div id="interLinkGroup"
+            style="visibility: hidden; position: absolute; left: -9999px; width: 100%; height: 750px; margin-bottom: 20px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #eee; display: flex; flex-direction: column;">
+
+            <!-- Prohibited Items & External Link Bar -->
+            <div
+                style="background: #f8f9fa; padding: 10px 15px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+
+
+                <a href="#" onclick="openProhibitedModal(); return false;" class="search-btn prohibited-btn"
+                    style="text-decoration:none; display:inline-block; padding: 8px 15px; font-size: 0.9em; background: linear-gradient(135deg, #ff9800, #f57c00); color:white; border:none; border-radius: 20px; box-shadow: 0 4px 6px rgba(245, 124, 0, 0.3);">
+                    <i class="fa-solid fa-ban"></i> <span data-i18n="btnProhibited">สิ่งของต้องห้ามฝากส่ง</span>
+                </a>
+            </div>
+
+            <div style="position: relative; flex: 1; width: 100%;">
+                <div id="interLoading"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px; color: var(--primary); font-weight: 500;">Connecting to Thailand Post
+                        International...</p>
+                </div>
+                <iframe src="https://international.thailandpost.com/find-rates/"
+                    style="width: 100%; height: 100%; border: none;" loading="eager"
+                    onload="document.getElementById('interLoading').style.display='none'">
+                    Your browser does not support iframes. <a href="https://international.thailandpost.com/find-rates/"
+                        target="_blank">Click here to view</a>
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Prohibited Items Modal -->
+        <div id="prohibitedModal" class="modal">
+            <div class="modal-content"
+                style="width: 95%; max-width: 800px; height: 90vh; padding: 0; display: flex; flex-direction: column;">
+                <div
+                    style="padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: #d32f2f;"><i class="fa-solid fa-triangle-exclamation"></i>
+                        สิ่งของต้องห้าม (Prohibited Items)</h3>
+                    <span class="close-modal" onclick="closeProhibitedModal()"
+                        style="position: static; font-size: 2rem; line-height: 1;">&times;</span>
+                </div>
+                <div style="flex: 1; position: relative;">
+                    <iframe id="prohibitedFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+                    <div id="prohibitedLoading"
+                        style="position: absolute; top:0; left:0; right:0; bottom:0; background:white; display:flex; justify-content:center; align-items:center;">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <div>Fetching live rates...</div>
+        </div>
+
+        <div class="results-area" id="resultsArea">
+            <h3 style="margin-bottom: 1rem; color: var(--secondary);" data-i18n="headerAvailableServices">
+                บริการที่รองรับ</h3>
+            <div id="resultsList">
+                <!-- Results injected here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeInfoModal()">&times;</span>
+            <h2>Service Information</h2>
+            <div class="modal-tabs">
+                <button class="tab-btn active" onclick="switchInfoTab('domestic')">Domestic Info</button>
+                <button class="tab-btn" onclick="switchInfoTab('international')">International Info</button>
+            </div>
+            <div id="info-domestic" class="info-img-container show">
+                <h4 style="margin:10px 0; color:var(--primary);">Domestic Services Info</h4>
+                <img src="assets/info_domestic_delivery.jpg" alt="Domestic Service Info">
+                <h4 style="margin:10px 0; color:var(--primary);">EMS Insurance Rates</h4>
+                <img src="assets/uploaded_image_1766821381063.png" alt="EMS Insurance Table"
+                    style="margin-bottom:1rem;">
+                <h4 style="margin:10px 0; color:var(--primary);">EMS Rates Table</h4>
+                <img src="assets/rate_ems.png" alt="EMS Rates" style="margin-bottom:1rem;">
+
+                <h4 style="margin:10px 0; color:var(--primary);">Domestic Remote Areas (2026)</h4>
+                <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
+                    <img src="assets/uploaded_image_0_1766950892467.jpg" alt="Remote Area 1"
+                        style="width:100%; border-radius:8px;">
+                    <img src="assets/uploaded_image_1_1766950892467.jpg" alt="Remote Area 2"
+                        style="width:100%; border-radius:8px;">
+                    <img src="assets/uploaded_image_2_1766950892467.jpg" alt="Remote Area 3"
+                        style="width:100%; border-radius:8px;">
+                    <img src="assets/uploaded_image_3_1766950892467.jpg" alt="Remote Area 4"
+                        style="width:100%; border-radius:8px;">
+                    <img src="assets/uploaded_image_4_1766950892467.jpg" alt="Remote Area 5"
+                        style="width:100%; border-radius:8px;">
+                </div>
+            </div>
+            <div id="info-international" class="info-img-container">
+                <img src="assets/info_domestic.jpg" alt="International Service Info">
+            </div>
+        </div>
+    </div>
+
+    <!-- Insurance Modal -->
+    <div id="insuranceModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-modal" onclick="closeInsuranceModal()">&times;</span>
+            <h3 style="color:var(--primary); margin-bottom:1rem;" data-i18n="modalInsuranceTitle">ประกันภัย EMS
+                (เพิ่มเติม)</h3>
+            <div class="form-group">
+                <label data-i18n="labelDeclaredValue">มูลค่าสิ่งของ (สูงสุด 50,000 บาท)</label>
+                <input type="number" id="declaredValue" placeholder="e.g. 5000" oninput="calculateInsurance()" min="0"
+                    max="50000">
+            </div>
+            <div style="background:#f8f9fa; padding:1.5rem; border-radius:12px; margin-top:1rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#555;">
+                    <span data-i18n="labelBaseShipping">ค่าส่งพื้นฐาน:</span>
+                    <span id="insBasePrice">0.00 ฿</span>
+                </div>
+                <div
+                    style="display:flex; justify-content:space-between; margin-bottom:10px; color:var(--primary); font-weight:600;">
+                    <span data-i18n="labelInsuranceFee">ค่าประกัน:</span>
+                    <span id="insFee">0.00 ฿</span>
+                </div>
+                <hr style="border:0; border-top:1px solid #ddd; margin:15px 0;">
+                <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.4rem;">
+                    <span data-i18n="labelTotal">รวมทั้งหมด:</span>
+                    <span id="insTotal" style="color:var(--secondary);">0.00 ฿</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dimension Modal -->
+    <div id="dimModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-modal" onclick="closeDimModal()">&times;</span>
+            <h3 style="color:var(--primary); margin-bottom:1rem;" data-i18n="modalDimTitle">ตรวจสอบ EMS ขนาดใหญ่</h3>
+            <div class="form-group">
+                <label data-i18n="labelDim">ขนาด (ซม.)</label>
+                <div style="display:flex; gap:10px; align-items: flex-start;">
+                    <input type="number" id="dimWidth" placeholder="กว้าง" data-i18n-ph="phWidth" min="0"
+                        onkeydown="handleEnter(event, 'dimLength')">
+                    <input type="number" id="dimLength" placeholder="ยาว" data-i18n-ph="phLength" min="0"
+                        onkeydown="handleEnter(event, 'dimHeight')">
+                    <input type="number" id="dimHeight" placeholder="สูง" data-i18n-ph="phHeight" min="0"
+                        onkeydown="handleEnter(event, '')">
+                    <button onclick="clearDimInputs()"
+                        style="background:none; border:none; color:red; font-size:1.2rem; cursor:pointer; padding:5px;"
+                        title="Clear Values"><i class="fa-solid fa-times-circle"></i></button>
+                </div>
+            </div>
+            <button onclick="calculateVolumetric()" class="search-btn" style="margin-top:10px;"
+                data-i18n="btnCheckSize">ตรวจสอบขนาด</button>
+            <div id="dimResult"
+                style="margin-top:1.5rem; display:none; background:#f8f9fa; padding:1rem; border-radius:12px;">
+                <!-- Results injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Auth Modal -->
+    <div id="adminAuthModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close-modal" onclick="closeAdminAuthModal()">&times;</span>
+            <h3 style="color:var(--primary); margin-bottom:1rem;">Admin Access</h3>
+            <form onsubmit="submitAdminAuth(event)">
+                <div class="form-group">
+                    <label>Password</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="password" id="adminPasswordInput" placeholder="Enter Admin Password" required
+                            style="flex:1;">
+                        <button type="button" onclick="togglePasswordVisibility('adminPasswordInput')"
+                            style="background:#eee; border:1px solid #ddd; border-radius:6px; width:45px; cursor:pointer; color:#555;">
+                            <i class="fa-solid fa-eye" id="icon-adminPasswordInput"></i>
+                        </button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" onclick="closeAdminAuthModal()" class="tab-btn"
+                        style="flex:1; justify-content:center;">Cancel</button>
+                    <button type="submit" class="search-btn" style="flex:1;">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Translations & Country Data -->
+    <script src="i18n.js"></script>
+    <script src="emsJumboData.js"></script>
+    <script src="domesticRemoteData.js"></script>
+    <script src="data2026.js"></script>
+    <script src="rateEngine.js"></script>
+    <script src="history.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
